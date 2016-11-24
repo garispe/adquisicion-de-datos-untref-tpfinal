@@ -1,6 +1,7 @@
 package ar.edu.untref.adquisiciondedatos.tpfinal;
 
 import android.content.Context;
+import android.graphics.PixelFormat;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
@@ -15,11 +16,9 @@ import android.view.WindowManager;
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
-import ar.edu.untref.adquisiciondedatos.tpfinal.utilidades.Cubo;
-
 public class ActividadPrincipal extends AppCompatActivity implements SensorEventListener {
 
-    private static final float ALPHA = 0.3f;
+    private static final float DELTA = 0.3f;
 
     private SensorManager sensorManager;
     private Sensor acelerometro;
@@ -45,6 +44,9 @@ public class ActividadPrincipal extends AppCompatActivity implements SensorEvent
                 WindowManager.LayoutParams.FLAG_FULLSCREEN);
 
         GLSurfaceView view = new GLSurfaceView(this);
+        view.setEGLConfigChooser(8, 8, 8, 8, 16, 0);
+        view.getHolder().setFormat(PixelFormat.TRANSPARENT);
+        view.setZOrderOnTop(true);
         view.setRenderer(new OpenGLRenderer());
 
         setContentView(view);
@@ -57,6 +59,7 @@ public class ActividadPrincipal extends AppCompatActivity implements SensorEvent
 
     protected void onResume() {
         super.onResume();
+
         sensorManager.registerListener(this, acelerometro,
                 SensorManager.SENSOR_DELAY_NORMAL);
         sensorManager.registerListener(this, magnetometro,
@@ -64,8 +67,15 @@ public class ActividadPrincipal extends AppCompatActivity implements SensorEvent
     }
 
     private float restringirAngulo(float angulo) {
-        while (angulo >= 180) angulo -= 360;
-        while (angulo < -180) angulo += 360;
+
+        while (angulo >= 180) {
+            angulo -= 360;
+        }
+
+        while (angulo < -180) {
+            angulo += 360;
+        }
+
         return angulo;
     }
 
@@ -76,7 +86,7 @@ public class ActividadPrincipal extends AppCompatActivity implements SensorEvent
         //Nos aseguramos que la dif sea <= a 180
         diferencia = restringirAngulo(diferencia);
 
-        y += ALPHA * diferencia;
+        y += DELTA * diferencia;
         //Nos aseguramos que Y quede entre [-180 y 180]
         y = restringirAngulo(y);
 
@@ -102,9 +112,9 @@ public class ActividadPrincipal extends AppCompatActivity implements SensorEvent
             float R[] = new float[9];
             float I[] = new float[9];
 
-            boolean success = SensorManager.getRotationMatrix(R, I, gravedad, geomagnetismo);
+            boolean exito = SensorManager.getRotationMatrix(R, I, gravedad, geomagnetismo);
 
-            if (success) {
+            if (exito) {
 
                 float orientation[] = new float[3];
                 SensorManager.getOrientation(R, orientation);
@@ -131,7 +141,7 @@ public class ActividadPrincipal extends AppCompatActivity implements SensorEvent
 
         public void onSurfaceCreated(GL10 gl, EGLConfig config) {
 
-            gl.glClearColor(0.0f, 0.0f, 0.0f, 0.5f);
+            gl.glClearColor(1.0f, 1.0f, 1.0f, 0.0f);
 
             gl.glClearDepthf(1.0f);
             gl.glEnable(GL10.GL_DEPTH_TEST);
@@ -150,7 +160,7 @@ public class ActividadPrincipal extends AppCompatActivity implements SensorEvent
             gl.glRotatef(roll, 0f, 1f, 0f);
             gl.glRotatef(pitch, 1f, 0f, 0f);
 
-            cubo.draw(gl);
+            cubo.dibujar(gl);
 
             gl.glLoadIdentity();
         }
@@ -160,7 +170,7 @@ public class ActividadPrincipal extends AppCompatActivity implements SensorEvent
             gl.glViewport(0, 0, width, height);
             gl.glMatrixMode(GL10.GL_PROJECTION);
             gl.glLoadIdentity();
-            GLU.gluPerspective(gl, 45.0f, (float)width / (float)height, 0.1f, 100.0f);
+            GLU.gluPerspective(gl, 45.0f, (float) width / (float) height, 0.1f, 100.0f);
             gl.glViewport(0, 0, width, height);
 
             gl.glMatrixMode(GL10.GL_MODELVIEW);
